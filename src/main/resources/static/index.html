@@ -4,270 +4,34 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>FairDraw</title>
-  <style>
-    :root {
-      color-scheme: light dark;
-      --bg: #f6f7fb;
-      --card: #fff;
-      --border: #d8dce6;
-      --text: #1a1d26;
-      --muted: #5c6478;
-      --accent: #2563eb;
-      --used: #e2e5ee;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #12141a;
-        --card: #1c1f28;
-        --border: #2e3445;
-        --text: #e8eaf0;
-        --muted: #9aa3b5;
-        --accent: #60a5fa;
-        --used: #2a2f3d;
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      margin: 0;
-      padding: 1.25rem;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.45;
-    }
-    h1 { font-size: 1.35rem; margin: 0 0 0.75rem; }
-    h2 { font-size: 1rem; margin: 1.25rem 0 0.5rem; color: var(--muted); font-weight: 600; }
-    section {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem 1.1rem;
-      margin-bottom: 1rem;
-      max-width: 720px;
-    }
-    label { display: block; font-size: 0.9rem; color: var(--muted); margin-bottom: 0.25rem; }
-    input[type="number"], input[type="text"] {
-      width: 100%;
-      max-width: 280px;
-      padding: 0.5rem 0.6rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg);
-      color: var(--text);
-    }
-    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 0.5rem; }
-    button {
-      padding: 0.5rem 0.85rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      cursor: pointer;
-      font-weight: 600;
-    }
-    button.primary {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-    button:disabled { opacity: 0.55; cursor: not-allowed; }
-    .codes {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 0.9rem;
-      word-break: break-all;
-      background: var(--bg);
-      padding: 0.6rem 0.75rem;
-      border-radius: 8px;
-      border: 1px dashed var(--border);
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(10, minmax(0, 1fr));
-      gap: 6px;
-      max-width: 520px;
-      margin-top: 0.5rem;
-    }
-    .cell {
-      border: 1px solid var(--border);
-      padding: 8px 4px;
-      text-align: center;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      background: var(--card);
-    }
-    .cell.used {
-      background: var(--used);
-      color: var(--muted);
-      text-decoration: line-through;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      max-width: 640px;
-      margin-top: 0.5rem;
-      font-size: 0.85rem;
-    }
-    th, td {
-      border: 1px solid var(--border);
-      padding: 6px 8px;
-      text-align: left;
-    }
-    th { background: var(--bg); color: var(--muted); font-weight: 600; }
-    .err { color: #b91c1c; font-size: 0.9rem; margin-top: 0.5rem; }
-    .meta { font-size: 0.9rem; color: var(--muted); margin-top: 0.35rem; }
-  </style>
+  <link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
-  <h1>FairDraw</h1>
-  <p class="meta">Numbers 1–50, no repeats, fixed shuffle at room creation. Create a room, share codes, poll status.</p>
+  <header>
+    <h1>FairDraw</h1>
+    <nav>
+      <span>Home</span>
+      <span aria-hidden="true">·</span>
+      <a href="/create.html">Host a room</a>
+      <span aria-hidden="true">·</span>
+      <a href="/draw.html">Join a draw</a>
+    </nav>
+  </header>
 
-  <section>
-    <h2>Create room</h2>
-    <label for="participantCount">Participants (2–50)</label>
-    <div class="row">
-      <input id="participantCount" type="number" min="2" max="50" value="2" />
-      <button type="button" class="primary" id="createRoom">Create room</button>
-    </div>
-    <div id="createError" class="err" hidden></div>
-    <div id="roomInfo" hidden>
-      <p style="margin:0.75rem 0 0.25rem"><strong>Room code</strong></p>
-      <div class="codes" id="roomCode"></div>
-      <p style="margin:0.75rem 0 0.25rem"><strong>User codes</strong> (share one per participant)</p>
-      <div class="codes" id="userCodes"></div>
-    </div>
-  </section>
+  <p class="lead">
+    FairDraw shuffles the numbers 1–50 once per room, with no repeats. Hosts create a room and
+    share codes; each participant uses their own code to draw and follow the pool.
+  </p>
 
-  <section>
-    <h2>Your session</h2>
-    <label for="userCode">Your user code</label>
-    <div class="row">
-      <input id="userCode" type="text" autocomplete="off" maxlength="8" placeholder="e.g. AB12C" />
-      <button type="button" class="primary" id="saveCode">Save</button>
-      <button type="button" id="drawBtn">Draw next</button>
-    </div>
-    <p class="meta" id="statusMeta"></p>
-    <div id="statusError" class="err" hidden></div>
-  </section>
-
-  <section>
-    <h2>Number pool</h2>
-    <p class="meta" id="remainingMeta"></p>
-    <div class="grid" id="grid"></div>
-  </section>
-
-  <section>
-    <h2>Audit log</h2>
-    <table>
-      <thead>
-        <tr><th>Time (UTC)</th><th>User code</th><th>Number</th></tr>
-      </thead>
-      <tbody id="log"></tbody>
-    </table>
-  </section>
-
-  <script>
-    const el = (id) => document.getElementById(id);
-    const grid = el('grid');
-    const log = el('log');
-    let currentCode = localStorage.getItem('fairdraw_code') || '';
-    el('userCode').value = currentCode;
-
-    function showError(id, msg) {
-      const n = el(id);
-      if (!msg) { n.hidden = true; n.textContent = ''; return; }
-      n.hidden = false;
-      n.textContent = msg;
-    }
-
-    function renderGrid(used) {
-      grid.innerHTML = '';
-      for (let n = 1; n <= 50; n++) {
-        const d = document.createElement('div');
-        d.className = 'cell' + (used.has(n) ? ' used' : '');
-        d.textContent = n;
-        grid.appendChild(d);
-      }
-    }
-
-    function renderHistory(history) {
-      log.innerHTML = '';
-      const rows = [...history].reverse();
-      for (const h of rows) {
-        const tr = document.createElement('tr');
-        const td1 = document.createElement('td');
-        const td2 = document.createElement('td');
-        const td3 = document.createElement('td');
-        td1.textContent = h.timestamp;
-        td2.textContent = h.userCode;
-        td3.textContent = h.number;
-        tr.appendChild(td1);
-        tr.appendChild(td2);
-        tr.appendChild(td3);
-        log.appendChild(tr);
-      }
-    }
-
-    async function refreshStatus() {
-      showError('statusError', '');
-      if (!currentCode) {
-        el('statusMeta').textContent = 'Enter and save your user code to sync.';
-        el('remainingMeta').textContent = '';
-        renderGrid(new Set());
-        renderHistory([]);
-        return;
-      }
-      const res = await fetch('/api/status?userCode=' + encodeURIComponent(currentCode));
-      if (!res.ok) {
-        showError('statusError', 'Invalid or unknown user code.');
-        el('statusMeta').textContent = '';
-        el('remainingMeta').textContent = '';
-        return;
-      }
-      const room = await res.json();
-      const used = new Set(room.history.map((h) => h.number));
-      renderGrid(used);
-      renderHistory(room.history);
-      el('statusMeta').textContent = 'Synced. Room: ' + room.roomCode;
-      el('remainingMeta').textContent = 'Remaining in pool: ' + room.remaining;
-    }
-
-    el('createRoom').onclick = async () => {
-      showError('createError', '');
-      const n = Number(el('participantCount').value);
-      const res = await fetch('/api/create?participantCount=' + encodeURIComponent(n), { method: 'POST' });
-      if (!res.ok) {
-        const t = await res.text();
-        showError('createError', t || 'Could not create room.');
-        return;
-      }
-      const data = await res.json();
-      el('roomCode').textContent = data.roomCode;
-      el('userCodes').textContent = data.userCodes.join(', ');
-      el('roomInfo').hidden = false;
-    };
-
-    el('saveCode').onclick = () => {
-      currentCode = el('userCode').value.trim().toUpperCase();
-      el('userCode').value = currentCode;
-      localStorage.setItem('fairdraw_code', currentCode);
-      refreshStatus();
-    };
-
-    el('drawBtn').onclick = async () => {
-      showError('statusError', '');
-      if (!currentCode) return;
-      const res = await fetch('/api/draw?userCode=' + encodeURIComponent(currentCode), { method: 'POST' });
-      if (!res.ok) {
-        showError('statusError', 'Draw failed (check your code).');
-        return;
-      }
-      await refreshStatus();
-    };
-
-    renderGrid(new Set());
-    renderHistory([]);
-    setInterval(refreshStatus, 2000);
-    refreshStatus();
-  </script>
+  <div class="cards">
+    <a class="card-link" href="/create.html">
+      <strong>Host a room</strong>
+      <span>Set how many people join, get a room code and one secret code per person.</span>
+    </a>
+    <a class="card-link" href="/draw.html">
+      <strong>Join a draw</strong>
+      <span>Enter the code you were given, draw numbers, and see the shared pool and log.</span>
+    </a>
+  </div>
 </body>
 </html>

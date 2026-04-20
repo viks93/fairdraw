@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Host a room · FairDraw</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <header>
+    <h1>Host a room</h1>
+    <nav>
+      <a href="/">Home</a>
+      <span aria-hidden="true">·</span>
+      <span>Host a room</span>
+      <span aria-hidden="true">·</span>
+      <a href="/draw.html">Join a draw</a>
+    </nav>
+  </header>
+
+  <p class="lead">
+    Choose how many people are in the room (2–50). Everyone gets a unique code; the number pool
+    is shuffled once when the room is created.
+  </p>
+
+  <section>
+    <h2>Create room</h2>
+    <label for="participantCount">Participants</label>
+    <div class="row">
+      <input id="participantCount" type="number" min="2" max="50" value="2" />
+      <button type="button" class="primary" id="createRoom">Create room</button>
+    </div>
+    <div id="createError" class="err" hidden></div>
+    <div id="roomInfo" hidden>
+      <p style="margin:0.75rem 0 0.25rem"><strong>Room code</strong> (share with the group)</p>
+      <div class="row">
+        <div class="codes" id="roomCode"></div>
+        <button type="button" class="small" id="copyRoom">Copy</button>
+      </div>
+      <p style="margin:0.75rem 0 0.25rem"><strong>Participant codes</strong> (give each person exactly one)</p>
+      <div class="row">
+        <div class="codes" id="userCodes"></div>
+        <button type="button" class="small" id="copyUsers">Copy all</button>
+      </div>
+      <p class="meta" style="margin-top:1rem">
+        Ready to draw? <a href="/draw.html">Open the participant view</a> and paste a code there.
+      </p>
+    </div>
+  </section>
+
+  <script>
+    const el = (id) => document.getElementById(id);
+
+    function showError(msg) {
+      const n = el('createError');
+      if (!msg) { n.hidden = true; n.textContent = ''; return; }
+      n.hidden = false;
+      n.textContent = msg;
+    }
+
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        prompt('Copy:', text);
+      }
+    }
+
+    el('createRoom').onclick = async () => {
+      showError('');
+      const n = Number(el('participantCount').value);
+      const res = await fetch('/api/create?participantCount=' + encodeURIComponent(n), { method: 'POST' });
+      if (!res.ok) {
+        const t = await res.text();
+        showError(t || 'Could not create room.');
+        return;
+      }
+      const data = await res.json();
+      el('roomCode').textContent = data.roomCode;
+      el('userCodes').textContent = data.userCodes.join(', ');
+      el('roomInfo').hidden = false;
+
+      el('copyRoom').onclick = () => copyText(data.roomCode);
+      el('copyUsers').onclick = () => copyText(data.userCodes.join(', '));
+    };
+  </script>
+</body>
+</html>
