@@ -155,3 +155,21 @@ th { background: var(--bg); color: var(--muted); font-weight: 600; }
 }
 .card-link strong { display: block; font-size: 1.05rem; margin-bottom: 0.35rem; color: var(--text); }
 .card-link span { font-size: 0.9rem; color: var(--muted); }
+
+section.last-draw-highlight {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.06), var(--card));
+}
+.last-draw-number {
+  font-size: 2.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  margin: 0.35rem 0 0.25rem;
+  letter-spacing: -0.03em;
+}
+.last-draw-number.empty {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 1.5rem;
+}

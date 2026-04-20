@@ -24,6 +24,12 @@
     shared pool.
   </p>
 
+  <section class="last-draw-highlight" id="lastDrawSection" aria-labelledby="lastDrawTitle">
+    <h2 id="lastDrawTitle">Last number drawn</h2>
+    <div class="last-draw-number empty" id="lastDrawNumber">—</div>
+    <p class="meta" id="lastDrawMeta">Enter your code and save to load the room.</p>
+  </section>
+
   <section>
     <h2>Your code</h2>
     <label for="userCode">Your participant code</label>
@@ -101,6 +107,21 @@
       }
     }
 
+    function updateLastDraw(history) {
+      const numEl = el('lastDrawNumber');
+      const metaEl = el('lastDrawMeta');
+      if (!history || history.length === 0) {
+        numEl.textContent = '—';
+        numEl.classList.add('empty');
+        metaEl.textContent = 'No draws yet in this room.';
+        return;
+      }
+      const last = history[history.length - 1];
+      numEl.textContent = last.number;
+      numEl.classList.remove('empty');
+      metaEl.textContent = 'By ' + last.userCode + ' · ' + last.timestamp;
+    }
+
     async function refreshStatus() {
       showError('statusError', '');
       if (!currentCode) {
@@ -108,6 +129,9 @@
         el('remainingMeta').textContent = '';
         renderGrid(new Set());
         renderHistory([]);
+        el('lastDrawNumber').textContent = '—';
+        el('lastDrawNumber').classList.add('empty');
+        el('lastDrawMeta').textContent = 'Enter your code and save to see the latest draw.';
         return;
       }
       const res = await fetch('/api/status?userCode=' + encodeURIComponent(currentCode));
@@ -115,12 +139,16 @@
         showError('statusError', 'Invalid or unknown code.');
         el('statusMeta').textContent = '';
         el('remainingMeta').textContent = '';
+        el('lastDrawNumber').textContent = '—';
+        el('lastDrawNumber').classList.add('empty');
+        el('lastDrawMeta').textContent = 'Could not load room — check your code.';
         return;
       }
       const room = await res.json();
       const used = new Set(room.history.map((h) => h.number));
       renderGrid(used);
       renderHistory(room.history);
+      updateLastDraw(room.history);
       el('statusMeta').textContent = 'Synced · room ' + room.roomCode;
       el('remainingMeta').textContent = 'Remaining in pool: ' + room.remaining;
     }
