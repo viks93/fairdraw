@@ -1,0 +1,13 @@
+# Render Blueprint — connect this repo in the Render dashboard (Blueprint / New Web Service).
+# https://render.com/docs/infrastructure-as-code
+
+services:
+  - type: web
+    name: fairdraw
+    repo: https://github.com/viks93/fairdraw
+    runtime: docker
+    branch: main
+    plan: free
+    healthCheckPath: /
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
