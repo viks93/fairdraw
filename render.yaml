@@ -1,10 +1,3 @@
-# Render Blueprint — connect this repo in the Render dashboard (Blueprint / New Web Service).
-# https://render.com/docs/infrastructure-as-code
-#
-# Rooms are stored in PostgreSQL so they survive deploys and idle sleep.
-# Free Postgres: create a project at https://neon.tech , copy the pooled
-# connection string (postgresql://…), and paste it when Render asks for DATABASE_URL.
-
 services:
   - type: web
     name: fairdraw

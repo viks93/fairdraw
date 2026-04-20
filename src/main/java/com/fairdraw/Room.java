@@ -12,7 +12,6 @@ import java.util.stream.IntStream;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-/** In-memory representation of a room; rebuilt from {@link RoomState} after each load. */
 public class Room {
 
     static final int POOL_MIN = 1;
