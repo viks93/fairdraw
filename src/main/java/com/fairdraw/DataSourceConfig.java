@@ -4,13 +4,19 @@ import com.zaxxer.hikari.HikariDataSource;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 @Configuration
 public class DataSourceConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(DataSourceConfig.class);
 
     @Bean
     @Primary
@@ -21,22 +27,42 @@ public class DataSourceConfig {
         }
         String trimmed = databaseUrl.trim();
         if (trimmed.startsWith("jdbc:")) {
+            log.info("Using PostgreSQL from DATABASE_URL (JDBC)");
             return jdbcUrlDataSource(trimmed);
         }
         if (trimmed.startsWith("postgres://") || trimmed.startsWith("postgresql://")) {
+            log.info("Using PostgreSQL from DATABASE_URL (URI)");
             return postgresUriDataSource(trimmed);
         }
         throw new IllegalStateException(
                 "DATABASE_URL must be a postgres:// or postgresql:// URI, or a full jdbc: URL");
     }
 
+    /**
+     * File-backed H2 so restarts keep room data when DATABASE_URL is not set (local dev). For
+     * production (e.g. Render), set DATABASE_URL to Postgres (e.g. Neon); the filesystem there is
+     * usually ephemeral anyway.
+     */
     private static DataSource h2DataSource() {
-        HikariDataSource ds = new HikariDataSource();
-        ds.setJdbcUrl("jdbc:h2:mem:fairdraw;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE");
-        ds.setUsername("sa");
-        ds.setPassword("");
-        ds.setDriverClassName("org.h2.Driver");
-        return ds;
+        try {
+            Path dir = Path.of(System.getProperty("user.home"), ".fairdraw");
+            Files.createDirectories(dir);
+            Path dbFile = dir.resolve("fairdraw");
+            String pathForH2 = dbFile.toAbsolutePath().normalize().toString().replace('\\', '/');
+            String jdbcUrl =
+                    "jdbc:h2:file:"
+                            + pathForH2
+                            + ";DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE";
+            log.info("Using file-backed H2 at {} (set DATABASE_URL for Postgres in production)", dbFile);
+            HikariDataSource ds = new HikariDataSource();
+            ds.setJdbcUrl(jdbcUrl);
+            ds.setUsername("sa");
+            ds.setPassword("");
+            ds.setDriverClassName("org.h2.Driver");
+            return ds;
+        } catch (Exception e) {
+            throw new IllegalStateException("Could not create H2 file database under ~/.fairdraw", e);
+        }
     }
 
     private static DataSource jdbcUrlDataSource(String jdbcUrl) {
